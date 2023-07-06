@@ -1,47 +1,3 @@
-CREATE TABLE titles (
-  title_id INT PRIMARY KEY,
-  title_name VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE employees (
-  employee_id INT PRIMARY KEY,
-  employee_name VARCHAR(50) NOT NULL,
-  title_id INT,
-  manager_id INT,
-  FOREIGN KEY (title_id) REFERENCES titles(title_id),
-  FOREIGN KEY (manager_id) REFERENCES employees(employee_id)
-);
-
-CREATE TABLE teams (
-  team_id INT PRIMARY KEY,
-  team_name VARCHAR(50) NOT NULL,
-  location VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE projects (
-  project_id INT PRIMARY KEY,
-  project_name VARCHAR(50) NOT NULL,
-  client VARCHAR(50) NOT NULL,
-  start_date DATE,
-  deadline DATE
-);
-
-CREATE TABLE team_project (
-  team_id INT,
-  project_id INT,
-  FOREIGN KEY (team_id) REFERENCES teams(team_id),
-  FOREIGN KEY (project_id) REFERENCES projects(project_id)
-);
-
-CREATE TABLE hour_tracking (
-  employee_id INT,
-  project_id INT,
-  total_hours FLOAT,
-  FOREIGN KEY (employee_id) REFERENCES employees(employee_id),
-  FOREIGN KEY (project_id) REFERENCES projects(project_id)
-);
-
-
 --create tables
 -- create titles table 
 CREATE TABLE IF NOT EXISTS application.titles
@@ -93,4 +49,70 @@ CREATE TABLE IF NOT EXISTS application.teams
 TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS application.teams
+    OWNER to admin;
+
+-- create projects
+CREATE TABLE IF NOT EXISTS application.projects
+(
+    project_id integer NOT NULL DEFAULT nextval('application.projects_project_id_seq'::regclass),
+    project_name character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    client character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    start_date date,
+    deadline date,
+    manager_id integer,
+    CONSTRAINT projects_pkey PRIMARY KEY (project_id),
+    CONSTRAINT manager_id FOREIGN KEY (manager_id)
+        REFERENCES application.employees (employee_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS application.projects
+    OWNER to admin;
+
+-- create team_project
+CREATE TABLE IF NOT EXISTS application.team_project
+(
+    team_id integer NOT NULL DEFAULT nextval('application.team_project_team_id_seq'::regclass),
+    project_id integer NOT NULL DEFAULT nextval('application.team_project_project_id_seq'::regclass),
+    CONSTRAINT project_id FOREIGN KEY (project_id)
+        REFERENCES application.projects (project_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        NOT VALID,
+    CONSTRAINT team_id FOREIGN KEY (team_id)
+        REFERENCES application.teams (team_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS application.team_project
+    OWNER to admin;
+
+-- create hour_tracking table
+CREATE TABLE IF NOT EXISTS application.hour_tracking
+(
+    employee_id integer,
+    project_id integer,
+    -- total_hours integer,
+    -- not sure float or integer
+    total_hours float,
+    CONSTRAINT employee_id FOREIGN KEY (employee_id)
+        REFERENCES application.employees (employee_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT project_id FOREIGN KEY (project_id)
+        REFERENCES application.projects (project_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        NOT VALID
+)
+
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS application.hour_tracking
     OWNER to admin;
